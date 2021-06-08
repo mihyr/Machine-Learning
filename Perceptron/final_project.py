@@ -5,10 +5,10 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import plot_confusion_matrix,confusion_matrix
 
 #Import training and testing data
-train_features = pd.read_csv('train/X_train.txt',delimiter="\s+",header=None)
-train_labels = pd.read_csv('train/y_train.txt', delimiter = "\s+",header=None)
-test_features = pd.read_csv('test/X_test.txt', delimiter = "\s+",header=None)
-test_labels = pd.read_csv('test/y_test.txt', delimiter = "\s+",header=None)
+train_features = pd.read_csv('UCI HAR Dataset/train/X_train.txt',delimiter="\s+",header=None)
+train_labels = pd.read_csv('UCI HAR Dataset/train/y_train.txt', delimiter = "\s+",header=None)
+test_features = pd.read_csv('UCI HAR Dataset/test/X_test.txt', delimiter = "\s+",header=None)
+test_labels = pd.read_csv('UCI HAR Dataset/test/y_test.txt', delimiter = "\s+",header=None)
 
 #Shape of training features and labels 
 print(f'Shape of training features {train_features.shape},and labels{train_labels.shape}')
@@ -63,6 +63,7 @@ def fit_perceptron(train_features,train_labels,tolerance, max_iteration):
     count = 0
     trigger = True
     error_array = []
+    accuracy_array = []
     while trigger:
         error_counter = 0
         count +=1
@@ -91,16 +92,17 @@ def fit_perceptron(train_features,train_labels,tolerance, max_iteration):
                     weights[label_index][i] +=  bias_feature[i]
 
         
-        print(f'iteration: {count}, errors found: {error_counter}')
+        print(f'iteration: {count}, No. of errors: {error_counter}')
+        accuracy = (training_size-error_counter)*100/training_size
         error_array.append(error_counter)
-
+        accuracy_array.append(accuracy)
         #If error is less than tolerance or loop exceed max iteration, break the loop
         if error_counter<=tolerance or max_iteration<=count:
             #print correct weights
             #print(f'Correct weights {weights}')
             trigger = False
-            accuracy = (training_size-error_counter)*100/training_size
-            return weights, accuracy, error_array
+            best_accuracy = (training_size-error_counter)*100/training_size
+            return weights, accuracy_array, error_array
 
 
 def predict_perceptron(test_features,test_labels,perceptron_weights):
@@ -127,22 +129,37 @@ def predict_perceptron(test_features,test_labels,perceptron_weights):
     return predict, accuracy
 
 def plot_confusion(actual_labels, predicted_labels):
+    plt.title('Confusion Matrix')
     c_matrix = confusion_matrix(actual_labels, predicted_labels) 
-    c_matrix = c_matrix / c_matrix.astype(np.float).sum(axis=1)
+    c_matrix_normalized = c_matrix / c_matrix.astype(np.float).sum(axis=1)
     axis_labels = ['Walking','Walking_Upstairs' ,'Walking_downstairs' ,'Sitting', 'Standing' ,'Laying']
     sn.heatmap(c_matrix, annot=True,xticklabels=axis_labels, yticklabels=axis_labels)
     plt.xlabel("Predicted") 
     plt.ylabel("Actual")
-    plt.rcParams['font.size'] = '5'
+    #plt.rcParams['font.size'] = '5'
+    plt.tight_layout()
+    plt.show()
+    plt.title('Normalized Confusion Matrix')
+    axis_labels = ['Walking','Walking_Upstairs' ,'Walking_downstairs' ,'Sitting', 'Standing' ,'Laying']
+    sn.heatmap(c_matrix_normalized, annot=True,xticklabels=axis_labels, yticklabels=axis_labels)
+    plt.xlabel("Predicted") 
+    plt.ylabel("Actual")
+    #plt.rcParams['font.size'] = '5'
     plt.tight_layout()
     plt.show()
 
-def plot_error(error_array):
+def plot_error(error_array,fit_accuracy):
     plt.plot(error_array)
     plt.xlabel("Iterations") 
     plt.ylabel("Number of Errors")
     plt.title('Errors vs. Epoch')
     plt.xticks(range(len(error_array)))
+    plt.show()
+    plt.plot(fit_accuracy)
+    plt.xlabel("Iterations") 
+    plt.ylabel("Accuracy")
+    plt.title('Accuracy vs. Epoch')
+    plt.xticks(range(len(fit_accuracy)))
     plt.show()
 
 
@@ -152,9 +169,9 @@ perceptron_weights, fit_accuracy, error_array = fit_perceptron(train_features,tr
 perceptron_predict,test_accuracy = predict_perceptron(test_features,test_labels,perceptron_weights)
 
 #Check accuracy of fit and test data
-print(f'fit accuracy: {fit_accuracy}%, test accuracy: {test_accuracy}%')
+print(f'fit accuracy: {fit_accuracy[-1]}%, test accuracy: {test_accuracy}%')
 
 #Plot Error vs Iterations
-plot_error(error_array)
+plot_error(error_array,fit_accuracy)
 #Plot Confusion matrix
 plot_confusion(test_labels, perceptron_predict)
