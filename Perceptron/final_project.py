@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
-from sklearn.metrics import plot_confusion_matrix,confusion_matrix
+from sklearn.metrics import confusion_matrix, classification_report
 
 #Import training and testing data
 train_features = pd.read_csv('UCI HAR Dataset/train/X_train.txt',delimiter="\s+",header=None)
@@ -23,11 +23,6 @@ feature_size = train_features.shape[1]
 training_size = train_features.shape[0]
 testing_size = test_features.shape[0]
 class_size = 6
-
-#Init weights of size feature_size x class_size
-weights = [[1 for x in range(feature_size)] for x in range(class_size)]
-
-#print(weights)
 
 #Convert data to nparray
 train_features= train_features.to_numpy()
@@ -59,6 +54,11 @@ def multi_class_activation(weighted_sum):
     return index + 1
 
 def fit_perceptron(train_features,train_labels,tolerance, max_iteration):
+    #Init weights of size feature_size x class_size
+    weights = [[1 for x in range(feature_size)] for x in range(class_size)]
+
+    #print(weights)
+
     training_size = train_features.shape[0]
     count = 0
     trigger = True
@@ -170,6 +170,9 @@ perceptron_predict,test_accuracy = predict_perceptron(test_features,test_labels,
 
 #Check accuracy of fit and test data
 print(f'fit accuracy: {fit_accuracy[-1]}%, test accuracy: {test_accuracy}%')
+
+#classification_report
+print(classification_report(test_labels, perceptron_predict))
 
 #Plot Error vs Iterations
 plot_error(error_array,fit_accuracy)
